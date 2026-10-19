@@ -1,35 +1,20 @@
 # Lab 03 Answers
 
-## Lab 3.1: Hash properties & toy Proof of Work
+## Lab 3.1: Hash properties and toy Proof of Work
 
-**Q1:** Each extra leading zero multiplies the expected work by about 16x.
-Each hex character of a SHA-256 digest has 16 possible values, so requiring
-one more leading zero hex digit shrinks the valid search space by a factor
-of 16. On average, finding a nonce for k leading zeros takes about 16^k tries.
+**Q1:** Each extra leading zero multiplies the expected work by about 16 times.
+Each hexadecimal character of a SHA-256 digest has 16 possible values. Requiring one more leading zero reduces the valid search space by a factor of 16. On average, finding a nonce for k leading zeros takes about 16^k tries.
 
-**Q2:** Verifying takes just 1 hash call. This shows the core asymmetry of
-Proof of Work: finding a valid nonce can take millions of tries, but checking
-it only needs a single hash computation. This asymmetry is what makes the
-consensus mechanism practical.
+**Q2:** Verification takes only one hash call. This is the main difference between finding and checking a Proof of Work nonce. Finding one may require millions of attempts, but checking it needs only one hash computation.
 
 ## Lab 3.2: Merkle tree
 
 **Q3:** For n = 1,000,000 transactions, a Merkle proof contains
-ceil(log2(1,000,000)) = 20 hash values, one sibling hash per level of the tree.
+ceil(log2(1,000,000)) = 20 hash values. Each value is the sibling hash for one level of the tree.
 
-**Q4:** SPV (Simplified Payment Verification) wallets use exactly this
-mechanism. A lightweight Bitcoin client does not download full blocks. It
-only stores block headers, which include the Merkle root, and to confirm a
-specific transaction is in a block, it requests a Merkle proof from a full
-node. It recomputes the path up to the root and compares it against the
-root already stored in the header it trusts. This lets the light client
-verify inclusion without downloading or storing the entire block.
+**Q4:** SPV (Simplified Payment Verification) wallets use this mechanism. A lightweight Bitcoin client does not download complete blocks. It stores block headers, including the Merkle root, and requests a Merkle proof from a full node when it needs to check a transaction. The wallet recomputes the path from the transaction to the root and compares the result with the root in the trusted header. This verifies that the transaction is included without storing the entire block.
 
-Other valid examples: airdrop eligibility proofs, where a project publishes
-only a Merkle root on chain and each user submits their own leaf plus proof
-to claim tokens; and proof of reserves, where an exchange publishes a
-Merkle root of all customer balances so users can verify their balance was
-included without seeing anyone else's.
+Other examples include airdrop eligibility proofs. A project publishes a Merkle root on chain, and each user submits their leaf and proof to claim tokens. Proof of reserves works similarly: an exchange publishes a Merkle root of customer balances so users can check that their balance was included without seeing other customers' balances.
 
 ## Lab 3.3: Sign, verify and recover with eth account
 
@@ -38,12 +23,7 @@ included without seeing anyone else's.
 [x] Yes (verified: sig_identical = True)
 [ ] No
 
-Which RFC explains this? RFC 6979 defines deterministic generation of the
-ECDSA nonce k from the private key and message hash using HMAC, instead of
-using a random k each time. This is why signing the same message with the
-same key twice produces the same signature (r, s, v). It also removes the
-risk of nonce reuse leaking the private key, which is a real vulnerability
-when k is random and gets reused.
+RFC 6979 explains this result. It generates the ECDSA nonce k deterministically from the private key and message hash using HMAC, rather than choosing a random k for every signature. Signing the same message with the same key therefore produces the same signature (r, s, v). It also avoids the private-key risk caused by accidentally reusing a random nonce.
 
 **Task 2: Tampered message**
 
@@ -57,16 +37,7 @@ match:      True
 tampered:   0xF9B354029c8133D1BdBfE7e59Fb24aafF0b80E2C
 ```
 
-Why does this prove integrity? The signature is a function of both the
-private key and the exact message bytes, since encode_defunct hashes the
-message before signing. Changing even a single character changes the
-message hash completely, due to the avalanche effect from Lab 3.1. So
-recovering a signer address from the original signature against the
-tampered message hash yields a different address than acct.address. Since
-the recovered address no longer matches, anyone verifying the signature
-can immediately tell the message was altered after it was signed. This is
-what gives a digital signature its integrity guarantee, in addition to
-authenticity.
+The signature depends on both the private key and the exact message bytes. `encode_defunct` hashes the message before signing. Changing even one character changes the message hash because of the avalanche effect from Lab 3.1. Recovering the signer address with the original signature and the tampered message therefore gives a different address from `acct.address`. The mismatch shows that the message was changed after signing. This is the integrity part of a digital signature, in addition to proving who signed it.
 
 **Task 3 (Bonus): MetaMask personal_sign**
 
